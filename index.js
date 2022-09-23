@@ -1,7 +1,11 @@
 const express = require('express');
 const app = express();
 
+const volleyball = require('volleyball');
+app.use(volleyball);
+
 const path = require('path');
+// eslint-disable-next-line no-undef
 const staticMiddleware = express.static(path.join(__dirname, 'public'));
 app.use(staticMiddleware);
 
@@ -9,10 +13,19 @@ const { db, Bookmark, Category } = require('./server');
 
 // parses url-encoded bodies
 app.use(express.urlencoded({ extended: false }));
-// parses json bodies
 app.use(express.json());
 
-app.get('/categories/:id', async (req, res, next) => {
+// DELETE /bookmarks/:id route that deletes a bookmark from the database based on its PK.
+app.delete('/bookmarks/:id', async (req, res) => {
+	const pk = +req.params.id;
+	const bookmark = await Bookmark.findByPk(pk);
+	console.log(`Grabbed bookmark: ${bookmark}`);
+	await bookmark.destroy();
+
+	res.redirect(`/`);
+});
+
+app.get('/categories/:id', async (req, res) => {
 	const id = +req.params.id;
 	const categoryObject = await Category.findByPk(id);
 
@@ -56,19 +69,40 @@ app.get('/categories/:id', async (req, res, next) => {
 	);
 });
 
-app.post('/bookmarks', async (req, res, next) => {
-	const submittedName = req.body.name;
-	const submittedUrl = req.body.url;
-	const submittedCategory = req.body.category;
-	console.log(submittedName, submittedUrl, submittedCategory);
-	res.send('Bookmark Submitted!');
+// Lets User add a bookmark
+app.post('/bookmarks', async (req, res) => {
+	const categoryString = req.body.category.toLowerCase();
+
+	// See if given category exists already, and get its instance.
+	let [categoryInstance] = await Category.findAll({
+		where: { name: categoryString },
+	});
+
+	// If not, we need to INSERT into Category table.
+	if (!categoryInstance) {
+		categoryInstance = await Category.create({
+			name: categoryString,
+		});
+	}
+
+	// Insert bookmark
+	await Bookmark.create({
+		name: req.body.name,
+		url: req.body.url,
+		categoryId: categoryInstance.id,
+	});
+
+	console.log('Added new bookmark!');
+
+	res.redirect('/bookmarks');
 });
 
-app.get('/', async (req, res, next) => {
+app.get('/', async (req, res) => {
 	//Set up the GET / route, which should redirect to the GET /bookmarks route.
 	res.redirect('/bookmarks');
 });
-app.get('/bookmarks', async (req, res, next) => {
+
+app.get('/bookmarks', async (req, res) => {
 	//const allCategories = await Category.findAll();
 	const bookmarks = await Bookmark.findAll();
 
@@ -89,10 +123,13 @@ app.get('/bookmarks', async (req, res, next) => {
 	<form method="post" action="/bookmarks">
 	<label for="name">Name</label>
 	<input type="text" name="name" />
+
 	<label for="url">URL</label>
 	<input type="text" name="url" />
+
 	<label for="category">Category</label>
 	<input type="text" name="category" />
+
 	<button type="submit">Submit</button>
 </form>
 		<ul>

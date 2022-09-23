@@ -16,6 +16,12 @@ const Category = db.define('category', {
 	name: {
 		type: Sequelize.STRING,
 		allowNull: false,
+
+		set(value) {
+			// Categories are case-insensitive.
+			// JOB, job and jOb should all be the same category.
+			this.setDataValue('name', value.toLowerCase());
+		},
 	},
 });
 

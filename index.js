@@ -7,6 +7,11 @@ app.use(staticMiddleware);
 
 const { db, Bookmark, Category } = require('./server');
 
+// parses url-encoded bodies
+app.use(express.urlencoded({ extended: false }));
+// parses json bodies
+app.use(express.json());
+
 app.get('/categories/:id', async (req, res, next) => {
 	const id = +req.params.id;
 	const categoryObject = await Category.findByPk(id);
@@ -51,6 +56,14 @@ app.get('/categories/:id', async (req, res, next) => {
 	);
 });
 
+app.post('/bookmarks', async (req, res, next) => {
+	const submittedName = req.body.name;
+	const submittedUrl = req.body.url;
+	const submittedCategory = req.body.category;
+	console.log(submittedName, submittedUrl, submittedCategory);
+	res.send('Bookmark Submitted!');
+});
+
 app.get('/', async (req, res, next) => {
 	//Set up the GET / route, which should redirect to the GET /bookmarks route.
 	res.redirect('/bookmarks');
@@ -72,6 +85,16 @@ app.get('/bookmarks', async (req, res, next) => {
 
 	</head>
 	<body>
+
+	<form method="post" action="/bookmarks">
+	<label for="name">Name</label>
+	<input type="text" name="name" />
+	<label for="url">URL</label>
+	<input type="text" name="url" />
+	<label for="category">Category</label>
+	<input type="text" name="category" />
+	<button type="submit">Submit</button>
+</form>
 		<ul>
       ${bookmarks
 				.map(

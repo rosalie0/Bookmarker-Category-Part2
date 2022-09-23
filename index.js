@@ -24,10 +24,8 @@ const { db, Bookmark, Category } = require('./server');
 
 // DELETE /bookmarks/:id route that deletes a bookmark from the database based on its PK.
 app.delete('/bookmarks/:id', async (req, res) => {
-	console.log('Delete endpoint hit');
 	const pk = +req.params.id;
 	const bookmark = await Bookmark.findByPk(pk);
-	console.log(`Grabbed bookmark: ${bookmark}`);
 	await bookmark.destroy();
 
 	res.redirect(`/`);

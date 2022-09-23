@@ -1,22 +1,30 @@
+// eslint-disable-next-line no-undef
+// Express
 const express = require('express');
 const app = express();
 
+// Volleyball Middleware
 const volleyball = require('volleyball');
 app.use(volleyball);
 
+// Static Middleware
 const path = require('path');
-// eslint-disable-next-line no-undef
 const staticMiddleware = express.static(path.join(__dirname, 'public'));
 app.use(staticMiddleware);
 
-const { db, Bookmark, Category } = require('./server');
-
-// parses url-encoded bodies
+// Body Parsers
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+// Middleware used for DELETE request
+const methodOverride = require('method-override');
+app.use(methodOverride('_method'));
+
+const { db, Bookmark, Category } = require('./server');
+
 // DELETE /bookmarks/:id route that deletes a bookmark from the database based on its PK.
 app.delete('/bookmarks/:id', async (req, res) => {
+	console.log('Delete endpoint hit');
 	const pk = +req.params.id;
 	const bookmark = await Bookmark.findByPk(pk);
 	console.log(`Grabbed bookmark: ${bookmark}`);
@@ -49,19 +57,29 @@ app.get('/categories/:id', async (req, res) => {
 	</head>
 	<body>
 	<h1> Bookmarks of category <span>${categoryObject.name}</span> </h1>
+		
 		<ul>
 			${filteredBookmarks
 				.map(
 					(bookmark) =>
 						`
-			<h1>${bookmark.name}</h1>
-			<li>primary key id === ${bookmark.id}</li>
-			<li>${bookmark.url}</li>
-			<li>categoryId === ${bookmark.categoryId}</li>
-			`
+						<div class="bookmark-card">
+							
+							<form method="post" action="/bookmarks/${bookmark.id}?_method=DELETE">
+							<button type="submit">X</button>
+							</form>
+
+							<h2>${bookmark.name}</h2>
+							<li>Primary Key id: ${bookmark.id}</li>
+							<li>URL: ${bookmark.url}</li>
+							<li>Category: ${categoryObject.name}</li>
+							<li>CategoryID: ${bookmark.categoryId}</li>
+							</div>
+							`
 				)
 				.join('')}
 		</ul>
+		
 		<a href="../"> Back </a>
 	</body>
 </html>
@@ -69,7 +87,7 @@ app.get('/categories/:id', async (req, res) => {
 	);
 });
 
-// Lets User add a bookmark
+// POST bookmarks
 app.post('/bookmarks', async (req, res) => {
 	const categoryString = req.body.category.toLowerCase();
 
@@ -92,16 +110,16 @@ app.post('/bookmarks', async (req, res) => {
 		categoryId: categoryInstance.id,
 	});
 
-	console.log('Added new bookmark!');
-
 	res.redirect('/bookmarks');
 });
 
+// GET /
 app.get('/', async (req, res) => {
 	//Set up the GET / route, which should redirect to the GET /bookmarks route.
 	res.redirect('/bookmarks');
 });
 
+// GET all bookmarks
 app.get('/bookmarks', async (req, res) => {
 	//const allCategories = await Category.findAll();
 	const bookmarks = await Bookmark.findAll();
@@ -137,11 +155,13 @@ app.get('/bookmarks', async (req, res) => {
 				.map(
 					(bookmark) =>
 						`
-        <h1>${bookmark.name}</h1>
-        <li>primary key id === ${bookmark.id}</li>
-        <li>${bookmark.url}</li>
-        <li>categoryId === ${bookmark.categoryId}</li>
-        `
+						<div class="bookmark-card">
+        			<h1>${bookmark.name}</h1>
+							<li>primary key id === ${bookmark.id}</li>
+							<li>${bookmark.url}</li>
+							<li>categoryId === ${bookmark.categoryId}</li>
+						</div>
+        		`
 				)
 				.join('')}
 		</ul>

@@ -42,6 +42,18 @@ const seedDb = async () => {
 		url: 'https://www.linkedin.com/',
 		categoryId: jobs.id,
 	});
+
+	await Bookmark.create({
+		name: 'Indeed',
+		url: 'https://www.indeed.com/',
+		categoryId: jobs.id,
+	});
+
+	await Bookmark.create({
+		name: 'MDN',
+		url: 'https://developer.mozilla.org/en-US/',
+		categoryId: coding.id,
+	});
 };
 
 seedDb();

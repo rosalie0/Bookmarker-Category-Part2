@@ -5,3 +5,17 @@ body {
 span {
 	background-color: yellow;
 }
+
+ul {
+	list-style: none;
+}
+
+h2 {
+	text-align: center;
+}
+.bookmark-card {
+	background-color: snow;
+	padding: 5px;
+	margin: 10px;
+	border: 1px solid black;
+}
